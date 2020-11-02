@@ -29,7 +29,27 @@ img.show()
 
 im_np = np.array(im)
 # %%
-#===================================================================================================
+#=============================== Test how to load the bands ===========================================
+from osgeo import gdal,osr
+filename = 'C:/Uni/9._Semester_Speciale_course_data/subset_collocat/'
+collocate= gdal.Open('Data/LST_collocate_20201012.tif')
+
+band = collocate.GetRasterBand(1)
+LST = band.ReadAsArray()
+
+LST_full = ReadGeoTif('Data/LST_collocate_20201012.tif')
+LST_lat = LST_full[0]
+LST_long = LST_full[1]
+LST = LST_full[2]
+
+plt.figure()
+plt.imshow(LST, extent = [LST_long.min(), LST_long.max(), LST_lat.min(), LST_lat.max()])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+
+
+#================================================================================================
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,7 +65,9 @@ lat = np.array([54, 57])
 long = np.array([8, 12])
 
 #=============================== NDVI =============================================
-filename = NDVI_input + "/HDF5_LSASAF_MSG_FVC_MSG-Disk_201409110000_FVC_warped.tif"
+filename = "Data/collocate.tif"
+
+
 
 NDVI_scope = scope_tiff(filename, lat, long)
 
@@ -56,7 +78,7 @@ plt.ylabel('Latitude')
 plt.show()
 
 #=============================== LST ==============================================
-filename_LST = LST_input + "/HDF5_LSASAF_MSG_LST_MSG-Disk_201409111300_LST_warped.tif"
+filename_LST = "Data/HDF5_LSASAF_MSG_LST_MSG-Disk_202010121200_LST_warped.tif"
 
 LST_scope = scope_tiff(filename_LST, lat, long)
 
