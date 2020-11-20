@@ -30,14 +30,24 @@ img.show()
 im_np = np.array(im)
 # %%
 #=============================== Test how to load the bands ===========================================
+import matplotlib.pyplot as plt
+import numpy as np
+import sys
+#sys.path.append('C:/Users/Glogta/OneDrive/Uni_current/Special_project/functions')
+from ReadGeoTif import *
+from scope_tiff import *
 from osgeo import gdal,osr
-filename = 'C:/Uni/9._Semester_Speciale_course_data/subset_collocat/'
-collocate= gdal.Open('Data/LST_collocate_20201012.tif')
+#filename = 'C:/Uni/9._Semester_Speciale_course_data/subset_collocat/'
+#collocate= gdal.Open('Data/LST_collocate_20201012.tif')
 
-band = collocate.GetRasterBand(1)
-LST = band.ReadAsArray()
+#band = collocate.GetRasterBand(1)
+#LST = band.ReadAsArray()
 
-LST_full = ReadGeoTif('Data/LST_collocate_20201012.tif')
+data_dir = 'Data/NDVI_LST_07_11.tif'
+
+#=============================== LST ==============================================
+
+LST_full = ReadGeoTif(data_dir, 2)
 LST_lat = LST_full[0]
 LST_long = LST_full[1]
 LST = LST_full[2]
@@ -46,11 +56,59 @@ plt.figure()
 plt.imshow(LST, extent = [LST_long.min(), LST_long.max(), LST_lat.min(), LST_lat.max()])
 plt.xlabel('Longitude')
 plt.ylabel('Latitude')
+plt.colorbar()
 plt.show()
 
+#=============================== NDVI =============================================
 
+NDVI_full = ReadGeoTif(data_dir, 1)
+NDVI_lat = NDVI_full[0]
+NDVI_long = NDVI_full[1]
+NDVI = NDVI_full[2]
+
+plt.figure()
+plt.imshow(NDVI, extent = [NDVI_long.min(), NDVI_long.max(), NDVI_lat.min(), NDVI_lat.max()])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.colorbar()
+plt.show()
+
+#=============================== CLM =============================================
+CLM = ((NDVI > 0) & (NDVI != np.max(NDVI)) & (LST != -80))*1
+
+plt.figure()
+plt.imshow(CLM, extent = [NDVI_long.min(), NDVI_long.max(), NDVI_lat.min(), NDVI_lat.max()])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+
+#============================== Save the files ==================================
+from PIL import Image
+im = Image.fromarray(NDVI)
+im.save('Data/NDVI.tif')
+
+im = Image.fromarray(LST)
+im.save('Data/LST.tif')
+
+im = Image.fromarray(CLM)
+im.save('Data/CLM.tif')
+
+# %%
+
+lat = np.array([LST_lat.min(), LST_lat.max()])
+long = np.array([LST_long.min(), LST_long.max()])
+filename = "C:/Uni/9._Semester_Speciale_course_data/MSG_07_11/Corrected/HDF5_LSASAF_MSG_LST_MSG-Disk_202011071200_LST_warped.tif"
+
+
+NDVI_scope = scope_tiff(filename, lat, long)
+plt.figure()
+plt.imshow(NDVI_scope, extent=[long[0], long[1], lat[0], lat[1]])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.colorbar()
+plt.show()
 #================================================================================================
-
+# %%
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -64,8 +122,10 @@ LST_input = 'C:/Uni/9._Semester_Speciale_course_data/Coordinated_LST'
 lat = np.array([54, 57])
 long = np.array([8, 12])
 
+lat = np.array([LST_lat.min(), LST_lat.max()])
+long = np.array([LST_long.min(), LST_long.max()])
 #=============================== NDVI =============================================
-filename = "Data/collocate.tif"
+filename = "Data/NDVI_collocate_20200711.tif"
 
 
 
@@ -78,7 +138,7 @@ plt.ylabel('Latitude')
 plt.show()
 
 #=============================== LST ==============================================
-filename_LST = "Data/HDF5_LSASAF_MSG_LST_MSG-Disk_202010121200_LST_warped.tif"
+filename_LST = "Data/LSTdiff_collocate_20200711.tif"
 
 LST_scope = scope_tiff(filename_LST, lat, long)
 

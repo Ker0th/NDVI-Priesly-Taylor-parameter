@@ -96,9 +96,9 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
 
-NDVI_path = "Data/NDVI_scope.tif"
-LST_path = "Data/LST_scope.tif"
-CLM_path = "Data/CLM_scope.tif"
+NDVI_path = "Data/NDVI.tif"
+LST_path = "Data/LST.tif"
+CLM_path = "Data/CLM.tif"
 output_path = "C:/Users/Glogta/OneDrive/Uni_current/Special_project/data/Scope/output"
 output_path = "Output"
 
@@ -106,7 +106,7 @@ T_NDVI(NDVI_path, LST_path, CLM_path, output_path)
 
 #==================================== Get T-NDVI plot) ======================================
 #======================================== Parser ============================================
-with open(output_path + '/NDVI_scope_TVDI_line_equations.txt') as f:
+with open(output_path + '/NDVI_TVDI_line_equations.txt') as f:
     test = f.readlines()
 T_NDVI = test[1].split()
 edges_param = [float(x) for x in T_NDVI[1:]]
@@ -141,6 +141,18 @@ rows_mask=fid.RasterYSize
 cols_mask=fid.RasterXSize
 # read each band and store the arrays
 mask = fid.GetRasterBand(1).ReadAsArray()
+
+
+# =================================== Test the data =========================================
+# plt.figure()
+# plt.imshow(NDVI)
+# #plt.xlabel('Longitude')
+# #plt.ylabel('Latitude')
+# plt.show()
+
+# plt.figure()
+# plt.plot(NDVI_sorted,'.')
+# plt.show()
 #==================================== reshape data ==========================================
 
 mask_array = mask.reshape(1,rows_mask*cols_mask)
@@ -186,13 +198,13 @@ LST_i_min = model_wet.predict(NDVI_sorted.reshape(-1,1))
 
 #========================== mask away unwated data =====================================
     
-NDVI_mask = (NDVI_sorted < NDVI_max) & (NDVI_sorted > 0)
-NDVI_sorted = NDVI_sorted[NDVI_mask]
-LST_sorted = LST_sorted[NDVI_mask]
+# NDVI_mask = (NDVI_sorted < NDVI_max) & (NDVI_sorted > 0)
+# NDVI_sorted = NDVI_sorted[NDVI_mask]
+# LST_sorted = LST_sorted[NDVI_mask]
 
-LST_mask = (LST_sorted < LST_i_max) & (LST_sorted > LST_i_min)
-NDVI_sorted = NDVI_sorted[LST_mask]
-LST_sorted = LST_sorted[LST_mask]
+# LST_mask = (LST_sorted < LST_i_max) & (LST_sorted > LST_i_min)
+# NDVI_sorted = NDVI_sorted[LST_mask]
+# LST_sorted = LST_sorted[LST_mask]
 
 #================================= plot ======================================
 
@@ -269,6 +281,24 @@ plt.title('$\phi_{i,min}$ as a function of NDVI')
 plt.grid()
 plt.show()
 
+#=================================== EF plotting =====================================
+EF = np.empty([1, rows_mask*cols_mask])
+
+
+#Ah okay so i need to do the reshape such that it fits with my sorted coordinates... otherwise i get this crap pattern
+
+
+#test = EF[mask_array.astype(bool)]
+EF[mask_array.astype(bool)] = phi
+
+EF_im = EF.reshape(rows_mask, cols_mask)
+
+plt.figure()
+plt.imshow(EF_im)
+plt.plot(EF_im > 1.26, 'r.')
+#plt.xlabel('Longitude')
+#plt.ylabel('Latitude')
+plt.show()
 
 
 

@@ -7,7 +7,7 @@ Created on Tue Jan 27 09:08:08 2015
 
 
 
-def ReadGeoTif(filename):
+def ReadGeoTif(filename, band_select):
     from osgeo import gdal,osr
     import numpy as np
     
@@ -35,7 +35,7 @@ def ReadGeoTif(filename):
     
     #Nx = ds.RasterXSize
     #Ny = ds.RasterYSize
-    band = ds.GetRasterBand(1)
+    band = ds.GetRasterBand(band_select)
     
     #print 'Band Type=',gdal.GetDataTypeName(band.DataType)
     
