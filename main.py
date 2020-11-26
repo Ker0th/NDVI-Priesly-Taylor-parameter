@@ -159,9 +159,12 @@ mask_array = mask.reshape(1,rows_mask*cols_mask)
 LST_array = LST.reshape(1,rows_LST*cols_LST)
 NDVI_array = NDVI.reshape(1,rows_NDVI*cols_NDVI)
 
+NDVI_array = np.squeeze(NDVI_array)
+LST_array = np.squeeze(LST_array)
+
 # remove unwanted values
-LST_array = LST_array[0,mask_array[0,:] == 1]
-NDVI_array = NDVI_array[0,mask_array[0,:] == 1]
+# LST_array = LST_array[0,mask_array[0,:] == 1]
+# NDVI_array = NDVI_array[0,mask_array[0,:] == 1]
 
 
 # # this might also work without the reshape
@@ -169,10 +172,15 @@ NDVI_array = NDVI_array[0,mask_array[0,:] == 1]
 # NDVI_array = NDVI[mask_array]
 
 #===================== Sort the NDVI and do a paired sort on the LST ========================
-NDVI_sorted, LST_sorted = zip(*sorted(zip(NDVI_array.T, LST_array.T)))
+index = np.arange(0,len(NDVI_array))
 
-NDVI_sorted = np.asarray(NDVI_sorted)
-LST_sorted = np.asarray(LST_sorted)
+NDVI_sorted, index_sorted = (np.array(x) for x in zip(*sorted(zip(NDVI_array, index))))
+
+LST_sorted = LST_array[index_sorted]
+# NDVI_sorted, LST_sorted = zip(*sorted(zip(NDVI_array.T, LST_array.T)))
+
+# NDVI_sorted = np.asarray(NDVI_sorted)
+# LST_sorted = np.asarray(LST_sorted)
 
 
 #============================= create dry and wet edges ==================================
@@ -196,15 +204,22 @@ model_wet.fit(x_wet.reshape(-1, 1), y_wet)
 #find T_i_max (T values for all NDVI values on the dry edge)
 LST_i_min = model_wet.predict(NDVI_sorted.reshape(-1,1))
 
+
+plt.figure()
+plt.plot(np.squeeze(NDVI_sorted), np.squeeze(LST_i_max))
+plt.plot(np.squeeze(NDVI_sorted), np.squeeze(LST_i_min))
+plt.show()
+
+
 #========================== mask away unwated data =====================================
     
-# NDVI_mask = (NDVI_sorted < NDVI_max) & (NDVI_sorted > 0)
-# NDVI_sorted = NDVI_sorted[NDVI_mask]
-# LST_sorted = LST_sorted[NDVI_mask]
+NDVI_mask = (NDVI_sorted < NDVI_max) & (NDVI_sorted > 0)
+NDVI_sorted[NDVI_mask == 0] = np.max(NDVI_sorted)
+LST_sorted[NDVI_mask == 0] = np.min(LST_sorted)
 
-# LST_mask = (LST_sorted < LST_i_max) & (LST_sorted > LST_i_min)
-# NDVI_sorted = NDVI_sorted[LST_mask]
-# LST_sorted = LST_sorted[LST_mask]
+LST_mask = (LST_sorted < LST_i_max) & (LST_sorted > LST_i_min)
+NDVI_sorted[LST_mask == 0] = np.max(NDVI_sorted)
+LST_sorted[LST_mask == 0] = np.min(LST_sorted)
 
 #================================= plot ======================================
 
@@ -273,7 +288,7 @@ for i in range(1,len(NDVI_sorted)):
     
     
 plt.figure()
-plt.plot(NDVI_sorted, phi_min)
+plt.plot(NDVI_sorted[NDVI_sorted < np.max(NDVI_sorted)], phi_min[NDVI_sorted < np.max(NDVI_sorted)],'.')
 plt.plot(NDVI_max,phi_max, 'ks')
 plt.xlabel('NDVI')
 plt.ylabel('$\phi_{i,min}$')
@@ -282,41 +297,106 @@ plt.grid()
 plt.show()
 
 #=================================== EF plotting =====================================
-EF = np.empty([1, rows_mask*cols_mask])
+EF = np.zeros([1, rows_mask*cols_mask])
 
 
 #Ah okay so i need to do the reshape such that it fits with my sorted coordinates... otherwise i get this crap pattern
 
-
+EF = phi
 #test = EF[mask_array.astype(bool)]
-EF[mask_array.astype(bool)] = phi
+#EF[mask_array.astype(bool) == 1] = phi
 
-EF_im = EF.reshape(rows_mask, cols_mask)
+index_return, EF_return = (np.array(x) for x in zip(*sorted(zip(index_sorted, EF))))
+
+EF_im = EF_return.reshape(rows_mask, cols_mask)
+
+#neutrolize the water
+EF_im[EF_im > 1.26] = np.NaN
 
 plt.figure()
-plt.imshow(EF_im)
-plt.plot(EF_im > 1.26, 'r.')
+plt.pcolor(EF_im, shading='flat',)
+plt.gca().invert_yaxis()
+plt.colorbar()
 #plt.xlabel('Longitude')
 #plt.ylabel('Latitude')
 plt.show()
 
+plt.figure()
+plt.pcolor(EF_im > 1.26, shading='flat',)
+plt.show()
+
+plt.figure()
+
+# An "interface" to matplotlib.axes.Axes.hist() method
+n, bins, patches = plt.hist(x=NDVI_sorted[NDVI_sorted < np.max(NDVI_sorted)], bins='auto', color='#0504aa',
+                            alpha=0.7, rwidth=0.85)
+plt.grid(axis='y', alpha=0.75)
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.title('NDVI array histogram')
+plt.text(23, 45, r'$\mu=15, b=3$')
+maxfreq = n.max()
+# Set a clean upper y-axis limit.
+plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
+plt.show()
+
+
+plt.figure()
+
+# An "interface" to matplotlib.axes.Axes.hist() method
+n, bins, patches = plt.hist(x=LST_sorted[LST_sorted > -80], bins='auto', color='#0504aa',
+                            alpha=0.7, rwidth=0.85)
+plt.grid(axis='y', alpha=0.75)
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.title('LST array histogram')
+plt.text(23, 45, r'$\mu=15, b=3$')
+maxfreq = n.max()
+# Set a clean upper y-axis limit.
+plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
+plt.show()
+# %% ================================== test sorting ============================
+import numpy as np
+A = np.array([94,82,12,56,35,54,35,22,11])
+B = np.arange(1,10)
+C = np.array([85,42,18,23,37,52,75,32,11])
+
+A_sorted, B_sorted = (np.array(x) for x in zip(*sorted(zip(A, B))))
+
+
+print('\n', A)
+print(C)
+print(A_sorted)
+print(C[B_sorted-1],'\n')
+
+
+B_return, A_return = (np.array(x) for x in zip(*sorted(zip(B_sorted, A_sorted))))
+
+print(A)
+print(A_sorted)
+print(A_return)
 
 
 
 
 
+plt.figure()
+plt.pcolor(LST, shading='flat')
+plt.gca().invert_yaxis()
+#plt.plot(EF_im > 1.26, 'r.')
+plt.colorbar()
+#plt.xlabel('Longitude')
+#plt.ylabel('Latitude')
+plt.show()
 
-
-
-
-
-
-
-
-
-
-
-
+plt.figure()
+plt.pcolor(NDVI, shading='flat')
+plt.gca().invert_yaxis()
+#plt.plot(EF_im > 1.26, 'r.')
+plt.colorbar()
+#plt.xlabel('Longitude')
+#plt.ylabel('Latitude')
+plt.show()
 
 
 
