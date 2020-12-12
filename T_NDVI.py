@@ -4,11 +4,14 @@ Created on Fri Oct  9 15:45:58 2020
 
 @author: Anders Slotsbo
 """
+import sys
+#sys.path.append('C:/Users/Glogta/OneDrive/Uni_current/Special project/pyTVDI-master')
+sys.path.append('/pyTVDI-master')
 import pyTVDI as tvdi
 
 def T_NDVI(NDVI_path, LST_path, CLM_path, output_path):
     """
-    This function runs the pyTNDVI script by Héctor 
+    This function runs the pyTNDVI script by Hector Nieto
 
     Parameters
     ----------
