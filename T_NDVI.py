@@ -4,22 +4,20 @@ Created on Fri Oct  9 15:45:58 2020
 
 @author: Anders Slotsbo
 """
-import sys
-sys.path.append('C:/Users/Glogta/OneDrive/Uni_current/Special project/pyTVDI-master')
 import pyTVDI as tvdi
 
 def T_NDVI(NDVI_path, LST_path, CLM_path, output_path):
     """
-    DESCRIPTION
+    This function runs the pyTNDVI script by Héctor 
 
     Parameters
     ----------
-    NDVI_path : TYPE
-        DESCRIPTION.
-    LST_path : TYPE
-        DESCRIPTION.
-    CLM_path : TYPE
-        DESCRIPTION.
+    NDVI_path : string
+        The path for the NDVI data file
+    LST_path : string
+        The path for the LST data file
+    CLM_path : string
+        The path for the cloud mask data file
 
     Returns
     -------
